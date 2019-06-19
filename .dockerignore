@@ -1,0 +1,6 @@
+vendor/
+helm/
+README.md
+Dockerfile
+*.so
+*.h

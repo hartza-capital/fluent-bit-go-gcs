@@ -1,0 +1,16 @@
+
+[[constraint]]
+  name = "cloud.google.com/go"
+  version = "0.40.0"
+
+[[constraint]]
+  name = "github.com/fluent/fluent-bit-go"
+  revision = "c017a8579953a0e55228908b85cdc5b29b6dcdd5"
+
+[[constraint]]
+  name = "github.com/google/uuid"
+  version = "1.1.1"
+
+[prune]
+  go-tests = true
+  unused-packages = true

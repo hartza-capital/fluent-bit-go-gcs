@@ -29,7 +29,7 @@ $ make
 
 | Key             | Description               | Default value | Note                    |
 |-----------------|---------------------------|---------------|-------------------------|
-| Credentials     | Path of GCP credentials   | `-`           | Mandatory parameter     |
+| Credential      | Path of GCP credential    | `-`           | Mandatory parameter     |
 | Bucket          | Bucket name of GCS        | `-`           | Mandatory parameter     |
 | Prefix          | Prefix of GCS key         | `-`           | Mandatory parameter     |
 | Region          | Region of GCS             | `-`           | Mandatory parameter     |

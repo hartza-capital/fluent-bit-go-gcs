@@ -30,7 +30,8 @@ data:
         Name             tail
         Path             {{ .Values.input.tail.path }}
         Parser           {{ .Values.input.tail.parser }}
-        Tag              {{ .Values.filter.kubeTag }}.*
+        Tag              {{ .Values.filter.kubeTag }}
+        Tag_Regex        {{ .Values.filter.kubeTagRegex }}*
         Refresh_Interval 5
         Mem_Buf_Limit    {{ .Values.input.tail.memBufLimit }}
         Skip_Long_Lines  On

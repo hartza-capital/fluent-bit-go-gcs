@@ -2,6 +2,8 @@ package main
 
 import (
 	"C"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,10 +14,6 @@ import (
 
 	"github.com/fluent/fluent-bit-go/output"
 	"github.com/google/uuid"
-)
-import (
-	"bytes"
-	"encoding/json"
 )
 
 var (
@@ -30,7 +28,7 @@ func FLBPluginRegister(def unsafe.Pointer) int {
 
 //export FLBPluginInit
 func FLBPluginInit(plugin unsafe.Pointer) int {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", output.FLBPluginConfigKey(plugin, "Credentials"))
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", output.FLBPluginConfigKey(plugin, "Credential"))
 	gcsClient, err = NewClient()
 	if err != nil {
 		output.FLBPluginUnregister(plugin)
@@ -54,7 +52,7 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 	// Type assert context back into the original type for the Go variable
 	values := output.FLBPluginGetContext(ctx).(map[string]string)
 
-	fmt.Printf("[gcs] Flush called, context %s, %s, %v\n", values["region"], values["bucket"], tag)
+	fmt.Printf("[gcs] Flush called, context %s, %s, %v\n", values["region"], values["bucket"], C.GoString(tag))
 
 	dec := output.NewDecoder(data, int(length))
 
@@ -63,15 +61,6 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 		if ret != 0 {
 			break
 		}
-
-		// Print record keys and values
-		// timestamp := ts.(output.FLBTime)
-		// fmt.Printf("%s: [%s, {", C.GoString(tag), timestamp.String())
-
-		// for k, v := range record {
-		// 	fmt.Printf("\"%s\": %v, ", k, v)
-		// }
-		// fmt.Printf("}\n")
 
 		// Get timestamp
 		var timestamp time.Time
@@ -87,13 +76,13 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 
 		line, err := createJSON(record)
 		if err != nil {
-			fmt.Printf("error creating message for S3: %v\n", err)
+			fmt.Printf("error creating message for GCS: %v\n", err)
 			continue
 		}
 
-		objectKey := GenerateObjectKey(values["bucket"], timestamp)
+		objectKey := GenerateObjectKey(values["bucket"], C.GoString(tag), timestamp)
 		if err = gcsClient.Write(values["bucket"], objectKey, bytes.NewReader(line)); err != nil {
-			fmt.Printf("error sending message for S3: %v\n", err)
+			fmt.Printf("error sending message in GCS: %v\n", err)
 			return output.FLB_RETRY
 		}
 	}
@@ -106,15 +95,15 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 	return output.FLB_OK
 }
 
-// format is S3_PREFIX/S3_TRAILING_PREFIX/date/hour/timestamp_uuid.log
-func GenerateObjectKey(S3Prefix string, t time.Time) string {
+// GenerateObjectKey : gen format object name PREFIX/date/hour/tag/timestamp_uuid.log
+func GenerateObjectKey(prefix, tag string, t time.Time) string {
 	timestamp := t.Format("20060102150405")
 	date := t.Format("20060102")
 	hour := strconv.Itoa(t.Hour())
 	logUUID := uuid.Must(uuid.NewRandom()).String()
 	fileName := strings.Join([]string{timestamp, "_", logUUID, ".log"}, "")
 
-	objectKey := filepath.Join(S3Prefix, date, hour, fileName)
+	objectKey := filepath.Join(prefix, date, hour, tag, fileName)
 	return objectKey
 }
 

@@ -230,8 +230,8 @@ filter:
   kubeURL: https://kubernetes.default.svc:443
   kubeCAFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
   kubeTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-  kubeTag: kube.<namespace_name>.<pod_name>
-  kubeTagRegex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)
+  kubeTag: <namespace_name>.<container_name>
+  kubeTagRegex: (?<pod_name>[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-(?<docker_id>[a-z0-9]{64})\.log$
   kubeTagPrefix: kube.var.log.containers.
 
 # If true, check to see if the log field content is a JSON string map, if so,

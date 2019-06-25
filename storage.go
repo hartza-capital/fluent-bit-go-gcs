@@ -7,11 +7,13 @@ import (
 	"cloud.google.com/go/storage"
 )
 
+// Client & Context Google Cloud
 type Client struct {
 	CTX context.Context
 	GCS *storage.Client
 }
 
+// NewClient Google Cloud
 func NewClient() (Client, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)

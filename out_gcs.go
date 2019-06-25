@@ -100,11 +100,9 @@ func GenerateObjectKey(prefix, tag string, t time.Time) string {
 	timestamp := t.Format("20060102150405")
 	date := t.Format("20060102")
 	hour := strconv.Itoa(t.Hour())
-	logUUID := uuid.Must(uuid.NewRandom()).String()
-	fileName := strings.Join([]string{timestamp, "_", logUUID, ".log"}, "")
+	fileName := strings.Join([]string{timestamp, "_", hour, "_", uuid.Must(uuid.NewRandom()).String(), ".log"}, "")
 
-	objectKey := filepath.Join(prefix, date, hour, tag, fileName)
-	return objectKey
+	return filepath.Join(prefix, date, tag, fileName)
 }
 
 func parseMap(mapInterface map[interface{}]interface{}) map[string]interface{} {
@@ -128,7 +126,6 @@ func parseMap(mapInterface map[interface{}]interface{}) map[string]interface{} {
 func createJSON(timestamp time.Time, tag string, record map[interface{}]interface{}) ([]byte, error) {
 	m := parseMap(record)
 
-	m["timestamp"] = timestamp.UTC().Format(time.RFC3339Nano)
 	js, err := jsoniter.Marshal(m)
 	if err != nil {
 		return []byte("{}"), err

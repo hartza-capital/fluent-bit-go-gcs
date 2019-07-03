@@ -4,10 +4,9 @@ import (
 	"C"
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 	"unsafe"
 
@@ -32,8 +31,7 @@ func FLBPluginInit(plugin unsafe.Pointer) int {
 	gcsClient, err = NewClient()
 	if err != nil {
 		output.FLBPluginUnregister(plugin)
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 		return output.FLB_ERROR
 	}
 
@@ -52,8 +50,7 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 	// Type assert context back into the original type for the Go variable
 	values := output.FLBPluginGetContext(ctx).(map[string]string)
 
-	fmt.Printf("[gcs] Flush called, context %s, %s, %v\n", values["region"], values["bucket"], C.GoString(tag))
-
+	log.Printf("[event] Flush called, context %s, %s, %v\n", values["region"], values["bucket"], C.GoString(tag))
 	dec := output.NewDecoder(data, int(length))
 
 	for {
@@ -70,19 +67,19 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 		case uint64:
 			timestamp = time.Unix(int64(t), 0)
 		default:
-			fmt.Print("timestamp isn't known format. Use current time.\n")
+			log.Println("[warn] timestamp isn't known format. Use current time.")
 			timestamp = time.Now()
 		}
 
 		line, err := createJSON(timestamp, C.GoString(tag), record)
 		if err != nil {
-			fmt.Printf("error creating message for GCS: %v\n", err)
+			log.Printf("[warn] error creating message for GCS: %v\n", err)
 			continue
 		}
 
 		objectKey := GenerateObjectKey(values["prefix"], C.GoString(tag), timestamp)
 		if err = gcsClient.Write(values["bucket"], objectKey, bytes.NewReader(line)); err != nil {
-			fmt.Printf("error sending message in GCS: %v\n", err)
+			log.Printf("[warn] error sending message in GCS: %v\n", err)
 			return output.FLB_RETRY
 		}
 	}
@@ -97,10 +94,8 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 
 // GenerateObjectKey : gen format object name PREFIX/date/hour/tag/timestamp_uuid.log
 func GenerateObjectKey(prefix, tag string, t time.Time) string {
-	timestamp := t.Format("20060102150405")
-	date := t.Format("20060102")
-	hour := strconv.Itoa(t.Hour())
-	fileName := strings.Join([]string{timestamp, "_", hour, "_", uuid.Must(uuid.NewRandom()).String(), ".log"}, "")
+	date := t.Format("2006-01-02")
+	fileName := fmt.Sprintf("%d_%s.log", t.Unix(), uuid.Must(uuid.NewRandom()).String())
 
 	return filepath.Join(prefix, date, tag, fileName)
 }

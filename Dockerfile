@@ -10,7 +10,7 @@ WORKDIR ${GOPATH}/src/fluent-bit-out-gcs
 COPY . .
 RUN make
 
-FROM fluent/fluent-bit:1.1.2
+FROM fluent/fluent-bit:1.2.0
 
 COPY --from=gobuilder /go/src/fluent-bit-out-gcs/out_gcs.so /fluent-bit/bin/
 COPY --from=gobuilder /go/src/fluent-bit-out-gcs/fluent-bit.conf /fluent-bit/etc/

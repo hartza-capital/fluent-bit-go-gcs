@@ -3,7 +3,7 @@ all: build
 dep:
 	@if [ ! -d "./vendor" ]; then dep ensure -v; fi
 
-docker:
+container:
 	@echo "Build image"
 	@docker build --no-cache -t quay.io/universe-sh/fluent-bit-out-gcs:latest .
 

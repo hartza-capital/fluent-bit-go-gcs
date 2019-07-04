@@ -5,7 +5,7 @@ This plugin works with fluent-bit's go plugin interface. You can use fluent-bit-
 The configuration typically looks like:
 
 ```
-fluent-bit --> Google Cloud Storage
+Fluent-Bit --> Google Cloud Storage <-- Google Cloud BigQuery
 ```
 
 # Usage
@@ -21,8 +21,14 @@ $ fluent-bit -e /path/to/built/out_gcs.so -c fluent-bit.conf
 
 ## Building
 
+Library:
 ```bash
 $ make
+```
+
+Container Image:
+```bash
+$ make container
 ```
 
 ### Configuration Options

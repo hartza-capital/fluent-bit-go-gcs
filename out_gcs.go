@@ -94,10 +94,8 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 
 // GenerateObjectKey : gen format object name PREFIX/date/hour/tag/timestamp_uuid.log
 func GenerateObjectKey(prefix, tag string, t time.Time) string {
-	date := t.Format("2006-01-02")
 	fileName := fmt.Sprintf("%d_%s.log", t.Unix(), uuid.Must(uuid.NewRandom()).String())
-
-	return filepath.Join(prefix, date, tag, fileName)
+	return filepath.Join(prefix, tag, fileName)
 }
 
 func parseMap(mapInterface map[interface{}]interface{}) map[string]interface{} {

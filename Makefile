@@ -5,7 +5,7 @@ dep:
 
 container:
 	@echo "Build image"
-	@docker build --no-cache -t quay.io/universe-sh/fluent-bit-out-gcs:latest .
+	@docker build --no-cache -t quay.io/universe-sh/fluent-bit-out-gcs:1.1.3 .
 
 build: dep
 	@echo "Build library"

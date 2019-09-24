@@ -1,17 +1,14 @@
-FROM golang:1.12 as gobuilder
+FROM golang:1.13 as gobuilder
 
-ENV GOOS=linux\
-    GOARCH=amd64
-
-RUN go get -u github.com/golang/dep/cmd/dep
+ENV GO111MODULE=on
 
 WORKDIR ${GOPATH}/src/fluent-bit-out-gcs
 COPY . .
 RUN make
 
-# Experimental if you use fluent-bit 1.2
-# library github.com/fluent/fluent-bit-go is based on v1.1 branch
-FROM fluent/fluent-bit:1.1.3
+# Experimental: the library github.com/fluent/fluent-bit-go
+# is based on v1.1 branch
+FROM fluent/fluent-bit:1.2.2
 
 COPY --from=gobuilder /go/src/fluent-bit-out-gcs/out_gcs.so /fluent-bit/bin/
 COPY --from=gobuilder /go/src/fluent-bit-out-gcs/fluent-bit.conf /fluent-bit/etc/

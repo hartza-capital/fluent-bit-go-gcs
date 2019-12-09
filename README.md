@@ -16,7 +16,7 @@ $ fluent-bit -e /path/to/built/out_gcs.so -c fluent-bit.conf
 
 # Prerequisites
 
-* Go 1.12+
+* Go 1.13+
 * gcc (for cgo)
 
 ## Building
@@ -28,7 +28,7 @@ $ make
 
 Container Image:
 ```bash
-$ make container
+$ make build
 ```
 
 ### Configuration Options

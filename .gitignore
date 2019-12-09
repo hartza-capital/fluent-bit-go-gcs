@@ -1,3 +1,5 @@
-vendor/
 *.so
 *.h
+
+# Build folder
+build/

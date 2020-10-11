@@ -1,6 +1,6 @@
 # Experimental: the library github.com/fluent/fluent-bit-go
 # is based on v1.2 branch
-FROM fluent/fluent-bit:1.3.3
+FROM fluent/fluent-bit:1.5.7
 
 ARG BUILD_DATE
 ARG VCS_REF

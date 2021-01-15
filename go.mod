@@ -5,6 +5,6 @@ go 1.13
 require (
 	cloud.google.com/go/storage v1.6.0
 	github.com/fluent/fluent-bit-go v0.0.0-20190925192703-ea13c021720c
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.5
 	github.com/json-iterator/go v1.1.9
 )

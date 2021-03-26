@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 	"unsafe"
 
@@ -52,13 +53,13 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 
 	log.Printf("[event] Flush called, context %s, %s, %v\n", values["region"], values["bucket"], C.GoString(tag))
 	dec := output.NewDecoder(data, int(length))
+	var rs []map[interface{}]interface{}
 
 	for {
 		ret, ts, record := output.GetRecord(dec)
 		if ret != 0 {
 			break
 		}
-
 		// Get timestamp
 		var timestamp time.Time
 		switch t := ts.(type) {
@@ -70,18 +71,13 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 			log.Println("[warn] timestamp isn't known format. Use current time.")
 			timestamp = time.Now()
 		}
+		record["ts"] = timestamp
+		rs = append(rs, record)
+	}
 
-		line, err := createJSON(timestamp, C.GoString(tag), record)
-		if err != nil {
-			log.Printf("[warn] error creating message for GCS: %v\n", err)
-			continue
-		}
-
-		objectKey := GenerateObjectKey(values["prefix"], C.GoString(tag), timestamp)
-		if err = gcsClient.Write(values["bucket"], objectKey, bytes.NewReader(line)); err != nil {
-			log.Printf("[warn] error sending message in GCS: %v\n", err)
-			return output.FLB_RETRY
-		}
+	if err := SaveRecords(values["bucket"], values["prefix"], C.GoString(tag), rs); err != nil {
+		log.Printf("[warn] error sending message in GCS: %v\n", err)
+		return output.FLB_RETRY
 	}
 
 	// Return options:
@@ -90,6 +86,19 @@ func FLBPluginFlushCtx(ctx, data unsafe.Pointer, length C.int, tag *C.char) int 
 	// output.FLB_ERROR = unrecoverable error, do not try this again.
 	// output.FLB_RETRY = retry to flush later
 	return output.FLB_OK
+}
+
+func SaveRecords(bucket, prefix, tag string, records []map[interface{}]interface{}) error {
+	t := time.Now()
+	j, err := createJSON(t, tag, records)
+	if err != nil {
+		return err
+	}
+	objectKey := GenerateObjectKey(prefix, tag, t)
+	if err := gcsClient.Write(bucket, objectKey, bytes.NewReader(j)); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GenerateObjectKey : gen format object name PREFIX/date/hour/tag/timestamp_uuid.log
@@ -116,10 +125,17 @@ func parseMap(mapInterface map[interface{}]interface{}) map[string]interface{} {
 	return m
 }
 
-func createJSON(timestamp time.Time, tag string, record map[interface{}]interface{}) ([]byte, error) {
-	m := parseMap(record)
+func createJSON(t time.Time, tag string, records []map[interface{}]interface{}) ([]byte, error) {
+	rs := make([]map[string]interface{}, len(records))
+	for i, r := range records {
+		rs[i] = parseMap(r)
+	}
 
-	js, err := jsoniter.Marshal(m)
+	js, err := jsoniter.Marshal(map[string]interface{}{
+		"ts":      strconv.Itoa(int(t.Unix())),
+		"tag":     tag,
+		"records": rs,
+	})
 	if err != nil {
 		return []byte("{}"), err
 	}

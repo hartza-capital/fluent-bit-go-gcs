@@ -1,5 +1,5 @@
 *.so
 *.h
-
+credentials.json
 # Build folder
 build/

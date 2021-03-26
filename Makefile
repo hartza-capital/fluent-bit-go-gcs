@@ -13,7 +13,7 @@ endif
 CURRENT_OS_ARCH=$(shell echo `go env GOOS`-`go env GOARCH`)
 GOBIN?=$(shell echo `go env GOPATH`/bin)
 
-IMAGE_TAG:=$(shell git cat-file -p HEAD | grep tree | awk '{print $2}')
+IMAGE_TAG:=$(shell git rev-parse HEAD)
 VCS_REF:=$(shell git rev-parse HEAD)
 BUILD_DATE:=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
@@ -31,10 +31,9 @@ test:
 
 build:
 	$(SUDO) docker build -t fluent-bit-out-gcs:$(IMAGE_TAG) \
-		--build-arg VCS_REF="$(VCS_REF)" \
+		--build-arg VCS_REF="$(IMAGE_TAG)" \
 		--build-arg BUILD_DATE="$(BUILD_DATE)" \
 		-f Dockerfile .
-	touch $@
 
 run:
 	docker run -it -p 2020:2020 -p 24224:24224 -v $(shell pwd)/credentials.json:/fluent-bit/etc/credentials.json -v $(shell pwd)/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf fluent-bit-out-gcs:$(IMAGE_TAG)

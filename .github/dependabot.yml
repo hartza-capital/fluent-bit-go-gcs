@@ -1,0 +1,17 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: cloud.google.com/go/storage
+    versions:
+    - 1.12.0
+    - 1.13.0
+    - 1.14.0
+  - dependency-name: github.com/json-iterator/go
+    versions:
+    - 1.1.10
